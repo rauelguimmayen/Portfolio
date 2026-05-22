@@ -159,13 +159,13 @@ export default function ContactSection() {
         className="absolute right-8 top-1/2 -translate-y-1/2 font-black select-none hidden lg:block"
         style={{ fontSize: '12rem', lineHeight: 1, color: 'rgba(15,15,30,0.06)' }}
       >
-        05
+        04
       </span>
 
       <div className="max-w-3xl mx-auto relative">
         {/* Header */}
         <div className="flex items-start gap-6 mb-4">
-          <span className="font-mono text-xs text-signal tracking-widest mt-2">05 //</span>
+          <span className="font-mono text-xs text-signal tracking-widest mt-2">04 //</span>
           <div>
             <p className="font-mono text-xs tracking-widest mb-2" style={{ color: 'var(--silver)' }}>DEPLOYMENT_TERMINAL</p>
             <h2 className="font-black uppercase leading-none" style={{ fontSize: 'clamp(2.5rem, 6vw, 5rem)', color: 'var(--navy)', letterSpacing: '-0.02em' }}>
