@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const InputField = ({ label, type = 'text', value, onChange, required, name }) => {
   const [focused, setFocused] = useState(false);
@@ -6,7 +6,7 @@ const InputField = ({ label, type = 'text', value, onChange, required, name }) =
   return (
     <div className="relative group">
       <label
-        className={`font-mono text-xs tracking-widest transition-all duration-200 block mb-2`}
+        className="font-mono text-xs tracking-widest transition-all duration-200 block mb-2"
         style={{ color: focused ? 'var(--orange)' : 'var(--silver)' }}
       >
         {label}{required && ' *'}
@@ -58,15 +58,63 @@ const TextareaField = ({ label, value, onChange, required, name }) => {
   );
 };
 
-// 🔑 Replace with your actual Web3Forms access key from https://web3forms.com
 const WEB3FORMS_ACCESS_KEY = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
+const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
 
 export default function ContactSection() {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [status, setStatus] = useState('idle'); // idle | sending | success | error
+  const [recaptchaToken, setRecaptchaToken] = useState(null);
+  const recaptchaRef = useRef(null);
+  const recaptchaWidgetId = useRef(null);
+
+  // Load reCAPTCHA script once
+  useEffect(() => {
+    // Define callback before script loads
+    window.onRecaptchaLoad = () => {
+      if (recaptchaRef.current && recaptchaWidgetId.current === null) {
+        recaptchaWidgetId.current = window.grecaptcha.render(recaptchaRef.current, {
+          sitekey: RECAPTCHA_SITE_KEY,
+          theme: 'light',
+          callback: (token) => setRecaptchaToken(token),
+          'expired-callback': () => setRecaptchaToken(null),
+          'error-callback': () => setRecaptchaToken(null),
+        });
+      }
+    };
+
+    if (!document.getElementById('recaptcha-script')) {
+      const script = document.createElement('script');
+      script.id = 'recaptcha-script';
+      script.src = 'https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoad&render=explicit';
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+    } else if (window.grecaptcha && recaptchaRef.current && recaptchaWidgetId.current === null) {
+      // Script already loaded (e.g. hot reload), render immediately
+      window.onRecaptchaLoad();
+    }
+
+    return () => {
+      delete window.onRecaptchaLoad;
+    };
+  }, []);
+
+  const resetRecaptcha = () => {
+    if (window.grecaptcha && recaptchaWidgetId.current !== null) {
+      window.grecaptcha.reset(recaptchaWidgetId.current);
+    }
+    setRecaptchaToken(null);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!recaptchaToken) {
+      alert('Please complete the reCAPTCHA verification.');
+      return;
+    }
+
     setStatus('sending');
 
     try {
@@ -82,6 +130,7 @@ export default function ContactSection() {
           email: form.email,
           subject: form.subject,
           message: form.message,
+          'g-recaptcha-response': recaptchaToken,
         }),
       });
 
@@ -90,13 +139,16 @@ export default function ContactSection() {
       if (data.success) {
         setStatus('success');
         setForm({ name: '', email: '', subject: '', message: '' });
+        resetRecaptcha();
       } else {
         console.error('Web3Forms error:', data);
         setStatus('error');
+        resetRecaptcha();
       }
     } catch (err) {
       console.error('Submission failed:', err);
       setStatus('error');
+      resetRecaptcha();
     }
   };
 
@@ -107,13 +159,13 @@ export default function ContactSection() {
         className="absolute right-8 top-1/2 -translate-y-1/2 font-black select-none hidden lg:block"
         style={{ fontSize: '12rem', lineHeight: 1, color: 'rgba(15,15,30,0.06)' }}
       >
-        04
+        05
       </span>
 
       <div className="max-w-3xl mx-auto relative">
         {/* Header */}
         <div className="flex items-start gap-6 mb-4">
-          <span className="font-mono text-xs text-signal tracking-widest mt-2">04 //</span>
+          <span className="font-mono text-xs text-signal tracking-widest mt-2">05 //</span>
           <div>
             <p className="font-mono text-xs tracking-widest mb-2" style={{ color: 'var(--silver)' }}>DEPLOYMENT_TERMINAL</p>
             <h2 className="font-black uppercase leading-none" style={{ fontSize: 'clamp(2.5rem, 6vw, 5rem)', color: 'var(--navy)', letterSpacing: '-0.02em' }}>
@@ -144,7 +196,7 @@ export default function ContactSection() {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Honeypot field — hidden from humans, catches bots */}
+            {/* Honeypot */}
             <input type="checkbox" name="botcheck" className="hidden" style={{ display: 'none' }} />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -178,6 +230,14 @@ export default function ContactSection() {
               required
             />
 
+            {/* reCAPTCHA v2 */}
+            <div>
+              <p className="font-mono text-xs tracking-widest mb-3" style={{ color: 'var(--silver)' }}>
+                VERIFICATION *
+              </p>
+              <div ref={recaptchaRef} />
+            </div>
+
             {/* Error state */}
             {status === 'error' && (
               <div
@@ -200,16 +260,17 @@ export default function ContactSection() {
               )}
               <button
                 type="submit"
-                disabled={status === 'sending'}
+                disabled={status === 'sending' || !recaptchaToken}
                 className="w-full py-6 font-black text-xl uppercase tracking-widest transition-all duration-100 border-2"
                 style={{
                   backgroundColor: 'var(--navy)',
                   color: 'var(--bone)',
                   borderColor: 'var(--navy)',
-                  cursor: status === 'sending' ? 'not-allowed' : 'pointer',
+                  opacity: !recaptchaToken || status === 'sending' ? 0.5 : 1,
+                  cursor: !recaptchaToken || status === 'sending' ? 'not-allowed' : 'pointer',
                 }}
                 onMouseEnter={(e) => {
-                  if (status !== 'sending') {
+                  if (status !== 'sending' && recaptchaToken) {
                     e.currentTarget.style.boxShadow = '6px 6px 0px var(--orange)';
                     e.currentTarget.style.transform = 'translate(-3px, -3px)';
                   }
