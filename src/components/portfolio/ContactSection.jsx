@@ -1,8 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { Notyf } from 'notyf';
 import 'notyf/notyf.min.css';
 
 const notyf = new Notyf();
+
+const WEB3FORMS_ACCESS_KEY = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
+const SUBJECT = 'New message from Portfolio Contact Form';
 
 const InputField = ({ label, type = 'text', value, onChange, required, name }) => {
   const [focused, setFocused] = useState(false);
@@ -10,7 +13,9 @@ const InputField = ({ label, type = 'text', value, onChange, required, name }) =
   return (
     <div className="relative group">
       <label
-        className="font-mono text-xs tracking-widest transition-all duration-200 block mb-2"
+        className={`font-mono text-xs tracking-widest transition-all duration-200 block mb-2 ${
+          focused ? 'text-signal' : 'text-silver'
+        }`}
         style={{ color: focused ? 'var(--orange)' : 'var(--silver)' }}
       >
         {label}{required && ' *'}
@@ -62,70 +67,12 @@ const TextareaField = ({ label, value, onChange, required, name }) => {
   );
 };
 
-const WEB3FORMS_ACCESS_KEY = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
-const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
-const SUBJECT = 'New message from Portfolio Contact Form';
-
 export default function ContactSection() {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [status, setStatus] = useState('idle'); // idle | sending | success | error
-  const [recaptchaToken, setRecaptchaToken] = useState('');
-  const recaptchaContainer = useRef(null);
-  const recaptchaWidgetId = useRef(null);
-
-  // reCAPTCHA callbacks
-  const onRecaptchaSuccess = (token) => setRecaptchaToken(token);
-  const onRecaptchaExpired = () => setRecaptchaToken('');
-
-  function renderRecaptcha() {
-    if (!window.grecaptcha) {
-      console.error('reCAPTCHA not loaded');
-      return;
-    }
-    recaptchaWidgetId.current = window.grecaptcha.render(recaptchaContainer.current, {
-      sitekey: RECAPTCHA_SITE_KEY,
-      size: 'normal',
-      callback: onRecaptchaSuccess,
-      'expired-callback': onRecaptchaExpired,
-    });
-  }
-
-  function resetRecaptcha() {
-    if (recaptchaWidgetId.current !== null) {
-      window.grecaptcha.reset(recaptchaWidgetId.current);
-      setRecaptchaToken('');
-    }
-  }
-
-  // Poll until grecaptcha is ready, then render widget
-  useEffect(() => {
-    if (!document.getElementById('recaptcha-script')) {
-      const script = document.createElement('script');
-      script.id = 'recaptcha-script';
-      script.src = 'https://www.google.com/recaptcha/api.js?render=explicit';
-      script.async = true;
-      script.defer = true;
-      document.head.appendChild(script);
-    }
-
-    const interval = setInterval(() => {
-      if (window.grecaptcha && window.grecaptcha.render && recaptchaContainer.current) {
-        renderRecaptcha();
-        clearInterval(interval);
-      }
-    }, 100);
-
-    return () => clearInterval(interval);
-  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!recaptchaToken) {
-      notyf.error('Please verify that you are not a robot.');
-      return;
-    }
-
     setStatus('sending');
 
     try {
@@ -141,7 +88,6 @@ export default function ContactSection() {
           name: form.name,
           email: form.email,
           message: form.message,
-          'g-recaptcha-response': recaptchaToken,
         }),
       });
 
@@ -150,18 +96,17 @@ export default function ContactSection() {
       if (result.success) {
         console.log(result);
         setStatus('success');
+        notyf.success('Message sent!');
         setForm({ name: '', email: '', subject: '', message: '' });
       } else {
         console.error('Web3Forms error:', result);
-        notyf.error('Failed to send message');
         setStatus('error');
+        notyf.error('Failed to send message');
       }
     } catch (err) {
       console.error('Submission failed:', err);
-      notyf.error('Failed to send message');
       setStatus('error');
-    } finally {
-      resetRecaptcha();
+      notyf.error('Failed to send message');
     }
   };
 
@@ -243,14 +188,6 @@ export default function ContactSection() {
               required
             />
 
-            {/* reCAPTCHA v2 */}
-            <div>
-              <p className="font-mono text-xs tracking-widest mb-3" style={{ color: 'var(--silver)' }}>
-                VERIFICATION *
-              </p>
-              <div ref={recaptchaContainer} />
-            </div>
-
             {/* Error state */}
             {status === 'error' && (
               <div
@@ -273,17 +210,17 @@ export default function ContactSection() {
               )}
               <button
                 type="submit"
-                disabled={status === 'sending' || !recaptchaToken}
+                disabled={status === 'sending'}
                 className="w-full py-6 font-black text-xl uppercase tracking-widest transition-all duration-100 border-2"
                 style={{
                   backgroundColor: 'var(--navy)',
                   color: 'var(--bone)',
                   borderColor: 'var(--navy)',
-                  opacity: !recaptchaToken || status === 'sending' ? 0.5 : 1,
-                  cursor: !recaptchaToken || status === 'sending' ? 'not-allowed' : 'pointer',
+                  opacity: status === 'sending' ? 0.5 : 1,
+                  cursor: status === 'sending' ? 'not-allowed' : 'pointer',
                 }}
                 onMouseEnter={(e) => {
-                  if (status !== 'sending' && recaptchaToken) {
+                  if (status !== 'sending') {
                     e.currentTarget.style.boxShadow = '6px 6px 0px var(--orange)';
                     e.currentTarget.style.transform = 'translate(-3px, -3px)';
                   }
