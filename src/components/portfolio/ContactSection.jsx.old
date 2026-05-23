@@ -1,8 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { Notyf } from 'notyf';
-import 'notyf/notyf.min.css';
-
-const notyf = new Notyf();
 
 const InputField = ({ label, type = 'text', value, onChange, required, name }) => {
   const [focused, setFocused] = useState(false);
@@ -64,65 +60,58 @@ const TextareaField = ({ label, value, onChange, required, name }) => {
 
 const WEB3FORMS_ACCESS_KEY = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
 const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
-const SUBJECT = 'New message from Portfolio Contact Form';
 
 export default function ContactSection() {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [status, setStatus] = useState('idle'); // idle | sending | success | error
-  const [recaptchaToken, setRecaptchaToken] = useState('');
-  const recaptchaContainer = useRef(null);
+  const [recaptchaToken, setRecaptchaToken] = useState(null);
+  const recaptchaRef = useRef(null);
   const recaptchaWidgetId = useRef(null);
 
-  // reCAPTCHA callbacks
-  const onRecaptchaSuccess = (token) => setRecaptchaToken(token);
-  const onRecaptchaExpired = () => setRecaptchaToken('');
-
-  function renderRecaptcha() {
-    if (!window.grecaptcha) {
-      console.error('reCAPTCHA not loaded');
-      return;
-    }
-    recaptchaWidgetId.current = window.grecaptcha.render(recaptchaContainer.current, {
-      sitekey: RECAPTCHA_SITE_KEY,
-      size: 'normal',
-      callback: onRecaptchaSuccess,
-      'expired-callback': onRecaptchaExpired,
-    });
-  }
-
-  function resetRecaptcha() {
-    if (recaptchaWidgetId.current !== null) {
-      window.grecaptcha.reset(recaptchaWidgetId.current);
-      setRecaptchaToken('');
-    }
-  }
-
-  // Poll until grecaptcha is ready, then render widget
+  // Load reCAPTCHA script once
   useEffect(() => {
+    // Define callback before script loads
+    window.onRecaptchaLoad = () => {
+      if (recaptchaRef.current && recaptchaWidgetId.current === null) {
+        recaptchaWidgetId.current = window.grecaptcha.render(recaptchaRef.current, {
+          sitekey: RECAPTCHA_SITE_KEY,
+          theme: 'light',
+          callback: (token) => setRecaptchaToken(token),
+          'expired-callback': () => setRecaptchaToken(null),
+          'error-callback': () => setRecaptchaToken(null),
+        });
+      }
+    };
+
     if (!document.getElementById('recaptcha-script')) {
       const script = document.createElement('script');
       script.id = 'recaptcha-script';
-      script.src = 'https://www.google.com/recaptcha/api.js?render=explicit';
+      script.src = 'https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoad&render=explicit';
       script.async = true;
       script.defer = true;
       document.head.appendChild(script);
+    } else if (window.grecaptcha && recaptchaRef.current && recaptchaWidgetId.current === null) {
+      // Script already loaded (e.g. hot reload), render immediately
+      window.onRecaptchaLoad();
     }
 
-    const interval = setInterval(() => {
-      if (window.grecaptcha && window.grecaptcha.render && recaptchaContainer.current) {
-        renderRecaptcha();
-        clearInterval(interval);
-      }
-    }, 100);
-
-    return () => clearInterval(interval);
+    return () => {
+      delete window.onRecaptchaLoad;
+    };
   }, []);
+
+  const resetRecaptcha = () => {
+    if (window.grecaptcha && recaptchaWidgetId.current !== null) {
+      window.grecaptcha.reset(recaptchaWidgetId.current);
+    }
+    setRecaptchaToken(null);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!recaptchaToken) {
-      notyf.error('Please verify that you are not a robot.');
+      alert('Please complete the reCAPTCHA verification.');
       return;
     }
 
@@ -137,30 +126,28 @@ export default function ContactSection() {
         },
         body: JSON.stringify({
           access_key: WEB3FORMS_ACCESS_KEY,
-          subject: SUBJECT,
           name: form.name,
           email: form.email,
+          subject: form.subject,
           message: form.message,
           'g-recaptcha-response': recaptchaToken,
         }),
       });
 
-      const result = await response.json();
+      const data = await response.json();
 
-      if (result.success) {
-        console.log(result);
+      if (data.success) {
         setStatus('success');
         setForm({ name: '', email: '', subject: '', message: '' });
+        resetRecaptcha();
       } else {
-        console.error('Web3Forms error:', result);
-        notyf.error('Failed to send message');
+        console.error('Web3Forms error:', data);
         setStatus('error');
+        resetRecaptcha();
       }
     } catch (err) {
       console.error('Submission failed:', err);
-      notyf.error('Failed to send message');
       setStatus('error');
-    } finally {
       resetRecaptcha();
     }
   };
@@ -248,7 +235,7 @@ export default function ContactSection() {
               <p className="font-mono text-xs tracking-widest mb-3" style={{ color: 'var(--silver)' }}>
                 VERIFICATION *
               </p>
-              <div ref={recaptchaContainer} />
+              <div ref={recaptchaRef} />
             </div>
 
             {/* Error state */}
