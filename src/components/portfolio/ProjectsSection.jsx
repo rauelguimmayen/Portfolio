@@ -20,6 +20,15 @@ const projects = [
     image: '/images/ECommerce Webapp.jpg',
   },
   {
+    title: 'Fitness Tracker App',
+    description: 'Created Frontend using Vue.js, API hosted in Render and Frontend hosted in Vercel',
+    tags: ['HTLM', 'CSS', 'Bootstrap','MongoDB', 'Render','Vercel', 'Github'],
+    liveUrl: 'https://fitness-tracker-app-chi.vercel.app/',
+    githubUrl: 'https://github.com/rauelguimmayen/FitnessTrackerApp',
+    color: '#0F1A20',
+    image: '/images/FitnessTrackerApp.jpg',
+  },
+  {
     title: 'Shop Vibe Webapp',
     description: 'Personal Project, an ECommerce webapp for multiple categories of products.',
     tags: ['HTLM', 'CSS', 'Bootstrap','MongoDB', 'Render','Github'],
@@ -46,6 +55,7 @@ const projects = [
     color: '#0F1A20',
     image: '/images/DevCourse.jpg',
   },
+  
   { placeholder: true },
 ];
 
