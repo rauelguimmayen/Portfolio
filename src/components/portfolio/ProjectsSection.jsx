@@ -29,6 +29,15 @@ const projects = [
     image: '/images/FitnessTrackerApp.jpg',
   },
   {
+    title: '101 Movies - Movie App',
+    description: 'Bootcamp Project, Built with Express.js and MongoDB for the Backend and Vue.js for the Frontend',
+    tags: ['Vue.js', 'Express.js', 'Bootstrap','MongoDB', 'Render','Vercel', 'Github'],
+    liveUrl: 'https://movie-web-app-guimmayen.vercel.app/',
+    githubUrl: 'https://github.com/rauelguimmayen/MovieWebApp-guimmayen',
+    color: '#0F1A20',
+    image: '/images/101Movies.jpg',
+  },
+  {
     title: 'Shop Vibe Webapp',
     description: 'Personal Project, an ECommerce webapp for multiple categories of products.',
     tags: ['HTLM', 'CSS', 'Bootstrap','MongoDB', 'Render','Github'],
@@ -56,6 +65,7 @@ const projects = [
     image: '/images/DevCourse.jpg',
   },
   
+
   { placeholder: true },
 ];
 
