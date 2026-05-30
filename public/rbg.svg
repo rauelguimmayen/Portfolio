@@ -1,0 +1,26 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="96" fill="#0b1020"/>
+
+  <path d="M128 170L72 256L128 342" stroke="#38bdf8" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M384 170L440 256L384 342" stroke="#38bdf8" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <rect x="150" y="130" width="212" height="252" rx="28" fill="#111827" stroke="#22c55e" stroke-width="10"/>
+
+  <circle cx="186" cy="166" r="8" fill="#ef4444"/>
+  <circle cx="214" cy="166" r="8" fill="#facc15"/>
+  <circle cx="242" cy="166" r="8" fill="#22c55e"/>
+
+  <text
+    x="256"
+    y="292"
+    text-anchor="middle"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="96"
+    font-weight="800"
+    fill="#ffffff"
+  >
+    RBG
+  </text>
+
+  <path d="M198 330H314" stroke="#38bdf8" stroke-width="12" stroke-linecap="round"/>
+</svg>
