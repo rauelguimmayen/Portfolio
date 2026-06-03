@@ -38,6 +38,15 @@ const projects = [
     image: '/images/101Movies.jpg',
   },
   {
+    title: 'Postly - Blog Application',
+    description: 'Bootcamp Project, Built with Express.js and MongoDB for the Backend and Vue.js for the Frontend',
+    tags: ['Vue.js', 'Express.js', 'Bootstrap','MongoDB', 'Render','Vercel', 'Github'],
+    liveUrl: 'https://blog-application-guimmayen.vercel.app/',
+    githubUrl: 'https://github.com/rauelguimmayen/BlogApplication-guimmayen',
+    color: '#0F1A20',
+    image: '/images/BlogApp.jpg',
+  },
+  {
     title: 'Shop Vibe Webapp',
     description: 'Personal Project, an ECommerce webapp for multiple categories of products.',
     tags: ['HTLM', 'CSS', 'Bootstrap','MongoDB', 'Render','Github'],
