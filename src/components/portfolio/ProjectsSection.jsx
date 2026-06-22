@@ -3,7 +3,7 @@ import ProjectCard from './ProjectCard';
 const projects = [
   {
     title: 'E-Commerce Workflow Management System',
-    description: 'Developed a full-featured e-commerce platform using the MEVN stack (MongoDB, Express.js, Vue, Node.js).',
+    description: 'Developed a full-featured e-commerce platform using the MEVN stack (MongoDB, Express.js, Vue, Node.js). Add feature to enable 2FA',
     tags: ['MongoDB','Express.js', 'Vue.js','Node.js','GitHub','Render','Vercel'],
     liveUrl: 'https://e-commerce-workflow-management-app.vercel.app/',
     githubUrl: 'https://github.com/rauelguimmayen/E-Commerce-Workflow-Management',
